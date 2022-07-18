@@ -66,7 +66,7 @@
           Добавить
         </button>
       </section>
-
+      <template v-if="tickers.length">
       <hr class="w-full border-t border-gray-600 my-4"/>
       <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div
@@ -105,6 +105,7 @@
 
       </dl>
       <hr class="w-full border-t border-gray-600 my-4"/>
+      </template>
       <section class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
           VUE - USD
