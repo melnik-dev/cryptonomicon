@@ -70,7 +70,9 @@
       <hr class="w-full border-t border-gray-600 my-4"/>
       <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div
-            v-for="item in tickers" :key="item.coinName"
+            v-for="item in tickers"
+            :key="item.coinName"
+            @click="sel = item"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
         >
           <div class="px-4 py-5 sm:p-6 text-center">
@@ -106,7 +108,7 @@
       </dl>
       <hr class="w-full border-t border-gray-600 my-4"/>
       </template>
-      <section class="relative">
+      <section v-if="sel" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
           VUE - USD
         </h3>
@@ -125,6 +127,7 @@
           ></div>
         </div>
         <button
+            @click="sel = null"
             type="button"
             class="absolute top-0 right-0"
         >
@@ -167,7 +170,8 @@ export default {
         {coinName: "VUE", price: 8000},
         {coinName: "BTC", price: 9999.9},
         {coinName: "DOGE", price: 0.0012},
-      ]
+      ],
+      sel:null
     }
   },
   methods: {
