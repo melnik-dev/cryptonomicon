@@ -70,7 +70,7 @@
       <hr class="w-full border-t border-gray-600 my-4"/>
       <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div
-            v-for="(item, i) in tickersData" :key="i"
+            v-for="item in tickers" :key="item.coinName"
             class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
         >
           <div class="px-4 py-5 sm:p-6 text-center">
@@ -83,6 +83,7 @@
           </div>
           <div class="w-full border-t border-gray-200"></div>
           <button
+              @click="deleteTicker(item)"
               class="flex items-center justify-center font-medium w-full bg-gray-100 px-4 py-4 sm:px-6 text-md text-gray-500 hover:text-gray-600 hover:bg-gray-200 hover:opacity-20 transition-all focus:outline-none"
           >
             <svg
@@ -159,8 +160,8 @@ export default {
   name: 'App',
   data() {
     return {
-      inputTickerValue: "inputTicker",
-      tickersData: [
+      inputTickerValue: "",
+      tickers: [
         {coinName: "WTF", price: 1.11},
         {coinName: "VUE", price: 8000},
         {coinName: "BTC", price: 9999.9},
@@ -170,7 +171,15 @@ export default {
   },
   methods: {
     addTicker() {
-      console.log("addTicker:" + this.inputTickerValue)
+      const newTicker = {
+        coinName: this.inputTickerValue,
+        price: 0.0012
+      };
+      this.tickers.push(newTicker);
+      this.inputTickerValue = "";
+    },
+    deleteTicker(tickerToRemove) {
+      this.tickers = this.tickers.filter(item => item != tickerToRemove)
     }
   }
 }
