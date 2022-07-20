@@ -166,12 +166,7 @@ export default {
   data() {
     return {
       inputTickerValue: "",
-      tickers: [
-        {coinName: "WTF", price: 1.11},
-        {coinName: "VUE", price: 8000},
-        {coinName: "BTC", price: 9999.9},
-        {coinName: "DOGE", price: 0.0012},
-      ],
+      tickers: [],
       sel: null
     }
   },
@@ -179,9 +174,18 @@ export default {
     addTicker() {
       const newTicker = {
         coinName: this.inputTickerValue,
-        price: 0.0012
+        price: "-"
       };
       this.tickers.push(newTicker);
+      setInterval(async () => {
+        const f = await fetch(
+            `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.coinName}&tsyms=USD&api_key=e9dda84eca02af885ca6ce19774294d1157524e671c84065683b0945904f6318`
+        );
+        const data = await f.json();
+        console.log(data)
+        // newTicker.price = data.USD прямое присваивание не реактивно
+        this.tickers.find(item => item.name === newTicker.name).price = data.USD;
+      }, 3000);
       this.inputTickerValue = "";
     },
     deleteTicker(tickerToRemove) {
