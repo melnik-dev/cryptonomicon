@@ -71,14 +71,14 @@
         <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
           <div
               v-for="item in tickers"
-              :key="item.coinName"
+              :key="item.name"
               @click="sel = item"
               :class="{'border-4' : sel == item}"
               class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
               <dt class="text-sm font-medium text-gray-500 truncate">
-                {{ item.coinName }} - USD
+                {{ item.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
                 {{ item.price }}
@@ -111,7 +111,7 @@
       </template>
       <section v-if="sel" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          {{ sel.coinName }} - USD
+          {{ sel.name }} - USD
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div
@@ -173,18 +173,20 @@ export default {
   methods: {
     addTicker() {
       const newTicker = {
-        coinName: this.inputTickerValue,
+        name: this.inputTickerValue,
         price: "-"
       };
+
       this.tickers.push(newTicker);
       setInterval(async () => {
         const f = await fetch(
-            `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.coinName}&tsyms=USD&api_key=e9dda84eca02af885ca6ce19774294d1157524e671c84065683b0945904f6318`
+            `https://min-api.cryptocompare.com/data/price?fsym=${newTicker.name}&tsyms=USD&api_key=09931619833507a99106a9f4d34788abdb7b2421e61fc907092fc9bfa5bd0aab`
         );
         const data = await f.json();
         console.log(data)
         // newTicker.price = data.USD прямое присваивание не реактивно
-        this.tickers.find(item => item.name === newTicker.name).price = data.USD;
+        this.tickers.find(item => item.name === newTicker.name).price =
+            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
       }, 3000);
       this.inputTickerValue = "";
     },
