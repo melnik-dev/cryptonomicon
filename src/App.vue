@@ -16,6 +16,7 @@
             <div class="mt-1 relative rounded-md shadow-md">
               <input
                   @keydown.enter="addTicker"
+                  @input="chooseCoin"
                   v-model="inputTickerValue"
                   type="text"
                   name="wallet"
@@ -26,23 +27,14 @@
             </div>
             <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
             <span
+                v-for="coin in coins"
+                :key="coin"
+                @click="inputTickerValue = coin"
                 class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              BTC
-            </span>
-              <span
-                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              DOGE
-            </span>
-              <span
-                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              BCH
-            </span>
-              <span
-                  class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              CHD
+              {{ coin }}
             </span>
             </div>
-            <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
+            <div v-if="isTicker" class="text-sm text-red-600">Такой тикер уже добавлен</div>
           </div>
         </div>
         <button
@@ -50,6 +42,7 @@
             type="button"
             class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
         >
+
           <!-- Heroicon name: solid/mail -->
           <svg
               class="-ml-0.5 mr-2 h-6 w-6"
@@ -155,6 +148,13 @@
 
 <script>
 
+
+// async function getCoin() {
+//   const response  = await fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true");
+//   const coinlist = await response.json();
+//   return coinlist;
+// }
+
 export default {
   name: 'App',
   data() {
@@ -162,32 +162,44 @@ export default {
       inputTickerValue: "",
       tickers: [],
       sel: null,
-      graph: []
+      graph: [],
+      coinlist: {},
+      coins: ["BTC", "DOGE", "BCH", "CHD"],
+      isTicker: false
     }
   },
   methods: {
     addTicker() {
-      const currentTicker = {
-        name: this.inputTickerValue,
-        price: "-"
-      };
-
-      this.tickers.push(currentTicker);
-      setInterval(async () => {
-        const f = await fetch(
-            `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=09931619833507a99106a9f4d34788abdb7b2421e61fc907092fc9bfa5bd0aab`
-        );
-        const data = await f.json();
-        console.log(data)
-        // currentTicker.price = data.USD прямое присваивание не реактивно
-        this.tickers.find(item => item.name === currentTicker.name).price =
-            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-
-        if (this.sel?.name === currentTicker.name) {
-          this.graph.push(data.USD)
+      this.tickers.find(item => {
+        if (item.name === this.inputTickerValue) {
+          this.isTicker = true;
         }
-      }, 5000);
-      this.inputTickerValue = "";
+      })
+
+      if (!this.isTicker) {
+
+        const currentTicker = {
+          name: this.inputTickerValue,
+          price: "-"
+        };
+
+        this.tickers.push(currentTicker);
+        setInterval(async () => {
+          const f = await fetch(
+              `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=09931619833507a99106a9f4d34788abdb7b2421e61fc907092fc9bfa5bd0aab`
+          );
+          const data = await f.json();
+          // currentTicker.price = data.USD прямое присваивание не реактивно
+          this.tickers.find(item => item.name === currentTicker.name).price =
+              data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
+
+          if (this.sel?.name === currentTicker.name) {
+            this.graph.push(data.USD);
+          }
+        }, 5000);
+        this.inputTickerValue = "";
+      }
+
     },
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter(item => item != tickerToRemove);
@@ -204,7 +216,33 @@ export default {
       return this.graph.map(
           price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
       );
+    },
+
+    chooseCoin() {
+      this.coins = [];
+      this.isTicker = false;
+
+      if (this.inputTickerValue === "") {
+        this.coins = [];
+      }
+
+      for (let coin in this.coinlist) {
+        if (coin.includes(this.inputTickerValue) || coin.includes(this.inputTickerValue.toUpperCase())) {
+          this.coins.push(coin);
+        }
+      }
+
+      this.coins = this.coins.sort((a, b) => a.length - b.length);
+      console.log(this.inputTickerValue);
+      if (this.coins.length > 4) {
+        this.coins.length = 4;
+      }
     }
+  },
+  async created() {
+    const response = await fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true");
+    const responseJson = await response.json();
+    this.coinlist = responseJson.Data;
   }
 }
 </script>
