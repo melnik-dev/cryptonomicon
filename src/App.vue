@@ -25,7 +25,9 @@
                   placeholder="Например DOGE"
               />
             </div>
-            <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
+            <div
+                v-if="inputTickerValue.length"
+                class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
             <span
                 v-for="coin in coins"
                 :key="coin"
@@ -147,14 +149,6 @@
 </template>
 
 <script>
-
-
-// async function getCoin() {
-//   const response  = await fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true");
-//   const coinlist = await response.json();
-//   return coinlist;
-// }
-
 export default {
   name: 'App',
   data() {
@@ -163,12 +157,29 @@ export default {
       tickers: [],
       sel: null,
       graph: [],
-      coinlist: {},
+      coinList: {},
       coins: ["BTC", "DOGE", "BCH", "CHD"],
       isTicker: false
     }
   },
   methods: {
+    subscribeToUpdate(tickerName){
+      // цикл обновления
+      setInterval(async () => {
+        const f = await fetch(
+            `https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=09931619833507a99106a9f4d34788abdb7b2421e61fc907092fc9bfa5bd0aab`
+        );
+        const data = await f.json();
+        // currentTicker.price = data.USD прямое присваивание не реактивно
+        this.tickers.find(item => item.name === tickerName).price =
+            data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
+
+        if (this.sel?.name === tickerName) {
+          this.graph.push(data.USD);
+        }
+      }, 5000);
+      this.inputTickerValue = "";
+    },
     addTicker() {
       this.tickers.find(item => {
         if (item.name === this.inputTickerValue) {
@@ -184,20 +195,9 @@ export default {
         };
 
         this.tickers.push(currentTicker);
-        setInterval(async () => {
-          const f = await fetch(
-              `https://min-api.cryptocompare.com/data/price?fsym=${currentTicker.name}&tsyms=USD&api_key=09931619833507a99106a9f4d34788abdb7b2421e61fc907092fc9bfa5bd0aab`
-          );
-          const data = await f.json();
-          // currentTicker.price = data.USD прямое присваивание не реактивно
-          this.tickers.find(item => item.name === currentTicker.name).price =
-              data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
 
-          if (this.sel?.name === currentTicker.name) {
-            this.graph.push(data.USD);
-          }
-        }, 5000);
-        this.inputTickerValue = "";
+        localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
+        this.subscribeToUpdate(currentTicker.name);
       }
 
     },
@@ -222,11 +222,7 @@ export default {
       this.coins = [];
       this.isTicker = false;
 
-      if (this.inputTickerValue === "") {
-        this.coins = [];
-      }
-
-      for (let coin in this.coinlist) {
+      for (let coin in this.coinList) {
         if (coin.includes(this.inputTickerValue) || coin.includes(this.inputTickerValue.toUpperCase())) {
           this.coins.push(coin);
         }
@@ -242,7 +238,17 @@ export default {
   async created() {
     const response = await fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true");
     const responseJson = await response.json();
-    this.coinlist = responseJson.Data;
+    this.coinList = responseJson.Data;
+
+    const tickersData = localStorage.getItem("cryptonomicon-list");
+
+    if (tickersData) {
+      this.tickers = JSON.parse(tickersData);
+      // каждый тикер кот. загружен с парса- подписываем обновления
+      this.tickers.forEach(ticker => {
+        this.subscribeToUpdate(ticker.name);
+      })
+    }
   }
 }
 </script>
