@@ -83,7 +83,7 @@
               v-for="item in paginatedTickers"
               :key="item.name"
               @click="select(item)"
-              :class="{'border-4' : sel === item}"
+              :class="{'border-4' : selectedTicker === item}"
               class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
@@ -119,9 +119,9 @@
         </dl>
         <hr class="w-full border-t border-gray-600 my-4"/>
       </template>
-      <section v-if="sel" class="relative">
+      <section v-if="selectedTicker" class="relative">
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
-          {{ sel.name }} - USD
+          {{ selectedTicker.name }} - USD
         </h3>
         <div class="flex items-end border-gray-600 border-b border-l h-64">
           <div
@@ -132,7 +132,7 @@
           ></div>
         </div>
         <button
-            @click="sel = null"
+            @click="selectedTicker = null"
             type="button"
             class="absolute top-0 right-0"
         >
@@ -170,7 +170,7 @@ export default {
     return {
       inputTickerValue: "",
       tickers: [],
-      sel: null,
+      selectedTicker: null,
       graph: [],
       coinList: {},
       page: 1,
@@ -225,7 +225,7 @@ export default {
         this.tickers.find(item => item.name === tickerName).price =
             data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
 
-        if (this.sel?.name === tickerName) {
+        if (this.selectedTicker?.name === tickerName) {
           this.graph.push(data.USD);
         }
       }, 5000);
@@ -245,22 +245,24 @@ export default {
           price: "-"
         };
 
-        this.tickers.push(currentTicker);
+        this.tickers = [...this.tickers, currentTicker]; // пишем так чтобы обновить ссылку на массив
         this.filter = "";
 
-        localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
         this.subscribeToUpdate(currentTicker.name);
       }
 
     },
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter(item => item !== tickerToRemove);
-      this.sel = null;
+
+      if (this.selectedTicker === tickerToRemove) {
+        this.selectedTicker = null;
+      }
     },
 
     select(ticker) {
-      this.sel = ticker;
-      this.graph = [];
+      this.selectedTicker = ticker;
+
     },
 
     chooseCoin() {
@@ -282,6 +284,13 @@ export default {
   },
 
   watch: {
+    selectedTicker() {
+      this.graph = [];
+    },
+    tickers(newValue, oldValue) {
+      console.log(newValue === oldValue);
+      localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
+    },
     paginatedTickers() {
       if (this.paginatedTickers.length === 0 && this.page > 1) {
         this.page -= 1;
