@@ -83,7 +83,7 @@
               v-for="item in paginatedTickers"
               :key="item.name"
               @click="select(item)"
-              :class="{'border-4' : sel == item}"
+              :class="{'border-4' : sel === item}"
               class="bg-white overflow-hidden shadow rounded-lg border-purple-800 border-solid cursor-pointer"
           >
             <div class="px-4 py-5 sm:p-6 text-center">
@@ -256,10 +256,6 @@ export default {
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter(item => item !== tickerToRemove);
       this.sel = null;
-
-      if (this.paginatedTickers.length === 0 && this.page > 1) {
-        this.page -= 1;
-      }
     },
 
     select(ticker) {
@@ -282,6 +278,29 @@ export default {
       if (this.coins.length > 4) {
         this.coins.length = 4;
       }
+    }
+  },
+
+  watch: {
+    paginatedTickers() {
+      if (this.paginatedTickers.length === 0 && this.page > 1) {
+        this.page -= 1;
+      }
+    },
+    filter() {
+      this.page = 1;
+      window.history.pushState(
+          null,
+          document.title,
+          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
+      );
+    },
+    page() {
+      window.history.pushState(
+          null,
+          document.title,
+          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
+      );
     }
   },
   async created() {
@@ -311,23 +330,6 @@ export default {
       })
     }
   },
-  watch: {
-    filter() {
-      this.page = 1;
-      window.history.pushState(
-          null,
-          document.title,
-          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
-      );
-    },
-    page() {
-      window.history.pushState(
-          null,
-          document.title,
-          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
-      );
-    }
-  }
 }
 </script>
 
