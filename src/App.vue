@@ -184,16 +184,13 @@ export default {
     startIndex() {
       return (this.page - 1) * 6;
     },
-
     endIndex() {
       return this.page * 6;
     },
-
     filteredTickers() {
       return this.tickers.filter(ticker => ticker.name.includes(this.filter));
 
     },
-
     paginatedTickers() {
       return this.filteredTickers.slice(this.startIndex, this.endIndex);
     },
@@ -210,10 +207,15 @@ export default {
       return this.graph.map(
           price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
       );
+    },
+    pageStateOption() {
+      return {
+        filter: this.filter,
+        page: this.page,
+      }
     }
   },
   methods: {
-
     subscribeToUpdate(tickerName) {
       // цикл обновления
       setInterval(async () => {
@@ -259,12 +261,9 @@ export default {
         this.selectedTicker = null;
       }
     },
-
     select(ticker) {
       this.selectedTicker = ticker;
-
     },
-
     chooseCoin() {
       this.coins = [];
       this.isTicker = false;
@@ -282,7 +281,6 @@ export default {
       }
     }
   },
-
   watch: {
     selectedTicker() {
       this.graph = [];
@@ -298,17 +296,12 @@ export default {
     },
     filter() {
       this.page = 1;
-      window.history.pushState(
-          null,
-          document.title,
-          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
-      );
     },
-    page() {
+    pageStateOption(value) {
       window.history.pushState(
           null,
           document.title,
-          `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
+          `${window.location.pathname}?filter=${value.filter}&page=${value.page}`
       );
     }
   },
@@ -317,10 +310,16 @@ export default {
         new URL(window.location).searchParams.entries()
     );
 
+    // const VALID_KEYS = ["filter", "page"];
+    // VALID_KEYS.forEach(key => {
+    //   if (windowData[key]) {
+    //     this[key] = windowData[key];
+    //   }
+    // });
+
     if (windowData.filter) {
       this.filter = windowData.filter;
     }
-
     if (windowData.filter) {
       this.page = windowData.page;
     }
