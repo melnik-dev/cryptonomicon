@@ -254,8 +254,12 @@ export default {
 
     },
     handleDelete(tickerToRemove) {
-      this.tickers = this.tickers.filter(item => item != tickerToRemove);
+      this.tickers = this.tickers.filter(item => item !== tickerToRemove);
       this.sel = null;
+
+      if (this.paginatedTickers.length === 0 && this.page > 1) {
+        this.page -= 1;
+      }
     },
 
     select(ticker) {
