@@ -164,7 +164,7 @@
 </template>
 
 <script>
-import { loadTicker } from "./api";
+import {loadTicker} from "./api";
 
 export default {
   name: 'App',
@@ -218,21 +218,29 @@ export default {
     }
   },
   methods: {
-    subscribeToUpdate(tickerName) {
-      // цикл обновления
-      setInterval(async () => {
+    async updateTickers() {
+      if (!this.tickers.length) {
+        return;
+      }
 
-        const exchangeData = await loadTicker(tickerName);
+      const exchangeData = await loadTicker(this.tickers.map(t => t.name));
 
-        // currentTicker.price = exchangeData.USD прямое присваивание не реактивно
-        this.tickers.find(item => item.name === tickerName).price =
-            exchangeData.USD > 1 ? exchangeData.USD.toFixed(2) : exchangeData.USD.toPrecision(2);
+      this.tickers.forEach(ticker => {
+        const price = exchangeData[ticker.name.toUpperCase()];
 
-        if (this.selectedTicker?.name === tickerName) {
-          this.graph.push(exchangeData.USD);
+        if (!price) {
+          ticker.price = "-";
+          return;
         }
-      }, 5000);
-      this.inputTickerValue = "";
+
+        const normalizePrice = 1 / price;
+        const formattedPrice =
+            normalizePrice > 1 ?
+                normalizePrice.toFixed(2) :
+                normalizePrice.toPrecision(2);
+
+        ticker.price = formattedPrice;
+      });
     },
     addTicker() {
       this.tickers.find(item => {
@@ -251,7 +259,6 @@ export default {
         this.tickers = [...this.tickers, currentTicker]; // пишем так чтобы обновить ссылку на массив
         this.filter = "";
 
-        this.subscribeToUpdate(currentTicker.name);
       }
 
     },
@@ -334,11 +341,11 @@ export default {
     if (tickersData) {
       this.tickers = JSON.parse(tickersData);
       // каждый тикер кот. загружен с парса - подписываем обновления
-      this.tickers.forEach(ticker => {
-        this.subscribeToUpdate(ticker.name);
-      })
+      //() => this.updateTickers() - можно не писать Vue автоматичиски биндит все методы которые описали
+      setInterval(this.updateTickers, 5000);
+
     }
-  },
+  }
 }
 </script>
 
