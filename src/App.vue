@@ -17,7 +17,7 @@
               <input
                   @keydown.enter="addTicker"
                   @input="chooseCoin"
-                  v-model="inputTickerValue"
+                  v-model="ticker"
                   type="text"
                   name="wallet"
                   id="wallet"
@@ -26,12 +26,12 @@
               />
             </div>
             <div
-                v-if="inputTickerValue.length"
+                v-if="ticker.length"
                 class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
             <span
                 v-for="coin in coins"
                 :key="coin"
-                @click="inputTickerValue = coin"
+                @click="ticker = coin"
                 class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
               {{ coin }}
             </span>
@@ -164,13 +164,13 @@
 </template>
 
 <script>
-import {loadTickers} from "./api";
+import { subscribeToTicker, unsubscribeFromTicker } from "./api";
 
 export default {
   name: 'App',
   data() {
     return {
-      inputTickerValue: "",
+      ticker: "",
       tickers: [],
       selectedTicker: null,
       graph: [],
@@ -210,7 +210,7 @@ export default {
           price => 5 + ((price - minValue) * 95) / (maxValue - minValue)
       );
     },
-    pageStateOption() {
+    pageStateOptions() {
       return {
         filter: this.filter,
         page: this.page,
@@ -218,27 +218,24 @@ export default {
     }
   },
   methods: {
+    updateTicker(tickerName, price) {
+      this.tickers
+          .filter(t => t.name === tickerName)
+          .forEach(t => {
+            t.price = price;
+          });
+    },
     formatPrice(price) {
       if (price === "-") {
         return price;
       }
+      price = Number(price);
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
-    async updateTickers() {
-      if (!this.tickers.length) {
-        return;
-      }
 
-      const exchangeData = await loadTickers(this.tickers.map(t => t.name));
-
-      this.tickers.forEach(ticker => {
-        const price = exchangeData[ticker.name.toUpperCase()];
-        ticker.price = price ?? "-";
-      });
-    },
     addTicker() {
       this.tickers.find(item => {
-        if (item.name === this.inputTickerValue) {
+        if (item.name === this.ticker) {
           this.isTicker = true;
         }
       })
@@ -246,13 +243,16 @@ export default {
       if (!this.isTicker) {
 
         const currentTicker = {
-          name: this.inputTickerValue,
+          name: this.ticker,
           price: "-"
         };
 
         this.tickers = [...this.tickers, currentTicker]; // пишем так чтобы обновить ссылку на массив
+        this.ticker = "";
         this.filter = "";
-
+        subscribeToTicker(currentTicker.name, newPrice =>
+            this.updateTicker(currentTicker.name, newPrice)
+        );
       }
 
     },
@@ -262,6 +262,7 @@ export default {
       if (this.selectedTicker === tickerToRemove) {
         this.selectedTicker = null;
       }
+      unsubscribeFromTicker(tickerToRemove.name);
     },
     select(ticker) {
       this.selectedTicker = ticker;
@@ -271,13 +272,12 @@ export default {
       this.isTicker = false;
 
       for (let coin in this.coinList) {
-        if (coin.includes(this.inputTickerValue) || coin.includes(this.inputTickerValue.toUpperCase())) {
+        if (coin.includes(this.ticker) || coin.includes(this.ticker.toUpperCase())) {
           this.coins.push(coin);
         }
       }
 
       this.coins = this.coins.sort((a, b) => a.length - b.length);
-      console.log(this.inputTickerValue);
       if (this.coins.length > 4) {
         this.coins.length = 4;
       }
@@ -336,9 +336,13 @@ export default {
       this.tickers = JSON.parse(tickersData);
       // каждый тикер кот. загружен с парса - подписываем обновления
       //() => this.updateTickers() - можно не писать Vue автоматичиски биндит все методы которые описали
-      setInterval(this.updateTickers, 5000);
-
+      this.tickers.forEach(ticker => {
+        subscribeToTicker(ticker.name, newPrice =>
+            this.updateTicker(ticker.name, newPrice)
+        );
+      });
     }
+    setInterval(this.updateTickers, 5000);
   }
 }
 </script>
