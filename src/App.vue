@@ -91,7 +91,7 @@
                 {{ item.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ item.price }}
+                {{ formatPrice(item.price) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -218,6 +218,9 @@ export default {
     }
   },
   methods: {
+    formatPrice(price) {
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2);
+    },
     async updateTickers() {
       if (!this.tickers.length) {
         return;
@@ -234,12 +237,8 @@ export default {
         }
 
         const normalizePrice = 1 / price;
-        const formattedPrice =
-            normalizePrice > 1 ?
-                normalizePrice.toFixed(2) :
-                normalizePrice.toPrecision(2);
 
-        ticker.price = formattedPrice;
+        ticker.price = normalizePrice;
       });
     },
     addTicker() {
