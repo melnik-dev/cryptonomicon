@@ -164,7 +164,7 @@
 </template>
 
 <script>
-import {loadTicker} from "./api";
+import {loadTickers} from "./api";
 
 export default {
   name: 'App',
@@ -219,6 +219,9 @@ export default {
   },
   methods: {
     formatPrice(price) {
+      if (price === "-") {
+        return price;
+      }
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
     async updateTickers() {
@@ -226,19 +229,11 @@ export default {
         return;
       }
 
-      const exchangeData = await loadTicker(this.tickers.map(t => t.name));
+      const exchangeData = await loadTickers(this.tickers.map(t => t.name));
 
       this.tickers.forEach(ticker => {
         const price = exchangeData[ticker.name.toUpperCase()];
-
-        if (!price) {
-          ticker.price = "-";
-          return;
-        }
-
-        const normalizePrice = 1 / price;
-
-        ticker.price = normalizePrice;
+        ticker.price = price ?? "-";
       });
     },
     addTicker() {
