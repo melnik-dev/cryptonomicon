@@ -174,10 +174,10 @@ export default {
       tickers: [],
       selectedTicker: null,
       graph: [],
-      coinList: {},
       page: 1,
       filter: "",
 
+      coinList: {},
       coins: ["BTC", "DOGE", "BCH", "CHD"],
       isTicker: false
     }
@@ -222,6 +222,9 @@ export default {
       this.tickers
           .filter(t => t.name === tickerName)
           .forEach(t => {
+            if (t === this.selectedTicker) {
+              this.graph.push(price)
+            }
             t.price = price;
           });
     },
@@ -312,19 +315,19 @@ export default {
         new URL(window.location).searchParams.entries()
     );
 
-    // const VALID_KEYS = ["filter", "page"];
-    // VALID_KEYS.forEach(key => {
-    //   if (windowData[key]) {
-    //     this[key] = windowData[key];
-    //   }
-    // });
+    const VALID_KEYS = ["filter", "page"];
+    VALID_KEYS.forEach(key => {
+      if (windowData[key]) {
+        this[key] = windowData[key];
+      }
+    });
 
-    if (windowData.filter) {
-      this.filter = windowData.filter;
-    }
-    if (windowData.filter) {
-      this.page = windowData.page;
-    }
+    // if (windowData.filter) {
+    //   this.filter = windowData.filter;
+    // }
+    // if (windowData.filter) {
+    //   this.page = windowData.page;
+    // }
 
     const response = await fetch("https://min-api.cryptocompare.com/data/all/coinlist?summary=true");
     const responseJson = await response.json();
