@@ -1,5 +1,5 @@
 const API_KEY =
-    "09931619833507a99106a9f4d34788abdb7b2421e61fc907092fc9bfa5bd0aab";
+    "444e219b9ab566cb08816218971dd62b24e68c4f824f8ffd78ddcbdddbced0b2";
 
 const tickersHandlers = new Map();
 
